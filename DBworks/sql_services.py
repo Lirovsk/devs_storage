@@ -30,24 +30,11 @@ class SQLService:
             session.add(new_user)
             session.commit()
 
-    @staticmethod
-    def search_user(user_name: str = None, user_email: str = None, age: int = None):
-        if user_name:
-            User = SQLService.search_user_by_name(user_name)
-            return User
-
-        elif user_email:
-            User = SQLService.search_user_by_email(user_email)
-            return User
-
-        elif not age:
-            users = SQLService.search_user_by_age(age)
-            return users
 
     @staticmethod
     def search_user_by_name(name: str):
         with Session(SQLService.get_engine()) as session:
-            return session.query(User).filter_by(name=name).first()
+            return session.query(User).filter_by(name=name).all()
 
     @staticmethod
     def search_user_by_email(email: str):
@@ -121,6 +108,33 @@ class SQLService:
                 else:
                     return 1
 
+
+    @staticmethod
+    def update_user(user_email: str, user_name: str, user_age: int):
+        user = SQLService.search_user_by_email(user_email)
+        if user:
+            with Session(SQLService.get_engine()) as session:
+                session.add(user)
+                user.name = user_name
+                user.age = user_age
+                user.email = user_email
+                session.commit()
+                return 0
+        else:
+            return 1
+
+
+    @staticmethod
+    def update_user_email(user_email: str, new_email: str):
+        user = SQLService.search_user_by_email(user_email)
+        if user:
+            with Session(SQLService.get_engine()) as session:
+                session.add(user)
+                user.email = new_email
+                session.commit()
+                return 0
+        else:
+            return 1
 
 if __name__ == '__main__':
     pass

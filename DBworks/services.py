@@ -7,16 +7,16 @@ from DBworks.sql_services import SQLService
 
 def create_user(dados):
     # Check if user with the same name or email already exists and return an error message if it does.
-    user_by_email = SQLService.search_user(user_email=dados['email'])
+    user_by_email = SQLService.search_user_by_email(dados['email'])
     if user_by_email:
         return json.dumps({"status": 1,
-                           "message": "User with the same name or email already exists."})
+                           "message": "User with the same email already exists."})
 
     # Create the user
     SQLService.create_user(name=dados['name'], age=dados['age'], email=dados['email'])
 
     # Search if the user was created and return a message confirming the creation of the user.
-    user = SQLService.search_user(user_name=dados['name'])
+    user = SQLService.search_user_by_email(dados['email'])
     if user:
         return json.dumps({"status": 0,
                           "message": f"User {user.name} created successfully!"})
@@ -26,11 +26,16 @@ def create_user(dados):
 
 
 def search_user_by_name(name):
-    user = SQLService.search_user_by_name(name)
-    if user:
+    users = SQLService.search_user_by_name(name)
+    response = []
+    
+    for user in users:
+        response.append({"name": user.name, "email": user.email})
+        
+    if users:
         return json.dumps({"status": 0,
-                          "message": f"User {user.name} found!",
-                          "user_data": {"name": user.name, "age": user.age, "email": user.email}})
+                          "message": f"Users found!",
+                          "user_data": response})
     else:
         return json.dumps({"status": 1,
                           "message": "User not found."})
@@ -115,3 +120,33 @@ def delete_hability(hability_name: str, user_email: str):
     else:
         return json.dumps({"status": 1,
                           "message": f"Hability {hability_name} not found for user {user.name}."})
+
+
+def update_user (user_email: str, user_name: str, user_age: int):
+    user = SQLService.search_user_by_email(user_email)
+    if user is None:
+        return json.dumps({"status": 1,
+                          "message": "User not found."})
+
+    returned = SQLService.update_user(user_email=user_email, user_name=user_name, user_age=user_age)
+    if returned == 0:
+        return json.dumps({"status": 0,
+                          "message": f"User {user_name} updated successfully!"})
+    else:
+        return json.dumps({"status": 1,
+                          "message": "User not updated."})
+
+
+def update_user_email(user_email: str, new_email: str):
+    user = SQLService.search_user_by_email(user_email)
+    if user is None:
+        return json.dumps({"status": 1,
+                          "message": "User not found."})
+
+    returned = SQLService.update_user_email(user_email=user_email, new_email=new_email)
+    if returned == 0:
+        return json.dumps({"status": 0,
+                          "message": f"User email updated successfully!"})
+    else:
+        return json.dumps({"status": 1,
+                          "message": "User email not updated."})
